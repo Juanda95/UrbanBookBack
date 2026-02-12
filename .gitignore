@@ -1,0 +1,34 @@
+# Ignorar archivos y directorios de Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates.suo
+
+# Ignorar binarios y archivos generados
+bin/
+obj/
+*.pdb
+*.dll
+*.exe
+*.cache
+*.log
+*.TestResults/
+*.userprefs
+
+# Ignorar archivos y carpetas relacionados con dependencias
+packages/
+*.nupkg
+.nuget/
+*.nupkg.sha512
+*.snupkg
+*.snupkg.sha512
+project.lock.json
+
+# Ignorar archivos de configuración y secretos
+*.secret.json
+appsettings.*.json
+/Administrador_citas_consultas/src/Presentation/UrbanBook/logs
+/Administrador_citas_consultas/src/Presentation/UrbanBook/appsettings.json
+
+/wwwroot/
