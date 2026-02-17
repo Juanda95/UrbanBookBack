@@ -18,6 +18,10 @@ namespace Persistence
                {
                    npgOptions.MigrationsAssembly("Persistence");
                    npgOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                   npgOptions.EnableRetryOnFailure(
+                       maxRetryCount: 3,
+                       maxRetryDelay: TimeSpan.FromSeconds(5),
+                       errorCodesToAdd: null);
                })
                .ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning)));
 
