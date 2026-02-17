@@ -33,11 +33,24 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Auto migrate database
+// Auto migrate database with retry
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<UrbanBookDbContext>();
-    db.Database.Migrate();
+    var maxRetries = 5;
+    for (var i = 0; i < maxRetries; i++)
+    {
+        try
+        {
+            db.Database.Migrate();
+            break;
+        }
+        catch (Npgsql.NpgsqlException) when (i < maxRetries - 1)
+        {
+            Console.WriteLine($"Database connection failed. Retrying in 5 seconds... ({i + 1}/{maxRetries})");
+            Thread.Sleep(5000);
+        }
+    }
 }
 
 app.useHandlingMiddleware();
