@@ -34,5 +34,10 @@
         /// URL de la imagen representativa del servicio.
         /// </summary>
         public string? ImagenUrl { get; set; }
+
+        /// <summary>
+        /// Indica si el servicio está activo.
+        /// </summary>
+        public bool Activo { get; set; }
     }
 }

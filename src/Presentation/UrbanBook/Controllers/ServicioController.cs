@@ -51,6 +51,16 @@ namespace UrbanBook.Controllers
             return StatusCode((int)respuestaServicio.HttpStatusCode, respuestaServicio);
         }
 
+        //PUT
+        [Authorize]
+        [HttpPut]
+        [Route("UpdateServicio")]
+        public async Task<IActionResult> UpdateServicio(ServicioDTORequest servicioRequest)
+        {
+            var respuestaServicio = await _servicioService.UpdateAsync(servicioRequest);
+            return StatusCode((int)respuestaServicio.HttpStatusCode, respuestaServicio);
+        }
+
         //DELETE
         [Authorize]
         [HttpDelete("DeleteServicio/{Id}")]

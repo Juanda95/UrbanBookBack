@@ -28,6 +28,7 @@ namespace Application
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IServicioService, ServicioService>();
             services.AddScoped<IPublicBookingService, PublicBookingService>();
+            services.AddScoped<IHorarioAtencionService, HorarioAtencionService>();
         }
     }
 }

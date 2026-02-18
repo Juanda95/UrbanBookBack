@@ -61,6 +61,12 @@ namespace Application.Helpers.Mappings
             // Professional public view (solo datos públicos)
             CreateMap<Usuario, ProfessionalPublicDTOResponse>();
 
+            // HorarioAtencion
+            CreateMap<HorarioAtencionDTORequest, HorarioAtencion>();
+            CreateMap<HorarioAtencion, HorarioAtencionDTOResponse>();
+            CreateMap<ExclusionHorarioDTORequest, ExclusionHorario>();
+            CreateMap<ExclusionHorario, ExclusionHorarioDTOResponse>();
+
         }
 
     }

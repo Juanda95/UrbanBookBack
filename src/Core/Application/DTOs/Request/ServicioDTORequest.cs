@@ -9,6 +9,11 @@ namespace Application.DTOs.Request
     public class ServicioDTORequest
     {
         /// <summary>
+        /// Identificador del servicio (requerido para actualización).
+        /// </summary>
+        public int? ServicioId { get; set; }
+
+        /// <summary>
         /// Nombre del servicio.
         /// </summary>
         [DisplayName("Nombre del Servicio")]
@@ -45,5 +50,10 @@ namespace Application.DTOs.Request
         /// </summary>
         [MaxLength(500, ErrorMessage = "La URL de la imagen debe tener menos de 500 caracteres")]
         public string? ImagenUrl { get; set; }
+
+        /// <summary>
+        /// Indica si el servicio está activo.
+        /// </summary>
+        public bool Activo { get; set; } = true;
     }
 }

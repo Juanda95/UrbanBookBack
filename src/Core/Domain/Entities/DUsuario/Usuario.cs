@@ -53,7 +53,12 @@ namespace Domain.Entities.DUsuario
         /// <summary>
         /// Lista de eventos asociados al usuario.
         /// </summary>
-        public virtual List<Evento> Eventos { get; set; } = []; 
+        public virtual List<Evento> Eventos { get; set; } = [];
+
+        /// <summary>
+        /// Lista de horarios de atención configurados por día de la semana.
+        /// </summary>
+        public virtual List<HorarioAtencion> HorariosAtencion { get; set; } = [];
 
     }
 }

@@ -57,9 +57,12 @@ namespace Application.Services
                     }
 
                     // Obtener eventos del profesional para la fecha indicada
+                    // Nota: 'fecha' llega como medianoche local del usuario en UTC
+                    // (ej: Colombia UTC-5: 2026-02-17T05:00:00Z = medianoche local del 17 Feb)
+                    // Usamos 'fecha' directamente como base para preservar el contexto de timezone
                     var eventoRepository = unitOfWork.GetRepository<Evento>();
-                    var fechaInicioDia = fecha.Date.ToUniversalTime();
-                    var fechaFinDia = fecha.Date.AddDays(1).ToUniversalTime();
+                    var fechaInicioDia = fecha;
+                    var fechaFinDia = fecha.AddDays(1);
 
                     var eventosDelDia = await eventoRepository.FindAllAsync(
                         e => e.UsuarioId == usuarioId &&
@@ -68,42 +71,100 @@ namespace Application.Services
                              e.FechaInicio < fechaFinDia
                     );
 
-                    // Definir horario laboral (9:00 - 18:00)
-                    var horaInicio = 9;
-                    var horaFin = 18;
-                    var intervaloMinutos = 30;
+                    // Obtener horario configurado del profesional para el día de la semana
+                    var horarioRepository = unitOfWork.GetRepository<HorarioAtencion>();
+                    var exclusionRepository = unitOfWork.GetRepository<ExclusionHorario>();
+                    int diaSemana = (int)fecha.DayOfWeek;
 
+                    var horariosDelDiaSemana = await horarioRepository.FindAllAsync(
+                        h => h.UsuarioId == usuarioId && h.DiaSemana == diaSemana);
+                    var horarioDia = horariosDelDiaSemana.FirstOrDefault();
+
+                    // Valores por defecto si no hay configuración
+                    TimeSpan horaInicioDia;
+                    TimeSpan horaFinDia;
+                    bool diaActivo = true;
+                    var exclusionesHorario = new List<ExclusionHorario>();
+
+                    if (horarioDia != null)
+                    {
+                        diaActivo = horarioDia.Activo;
+                        horaInicioDia = horarioDia.HoraInicio;
+                        horaFinDia = horarioDia.HoraFin;
+
+                        if (diaActivo)
+                        {
+                            var exclusiones = await exclusionRepository.FindAllAsync(
+                                e => e.HorarioAtencionId == horarioDia.HorarioAtencionId);
+                            exclusionesHorario = exclusiones.ToList();
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: horario por defecto 9:00 - 18:00
+                        horaInicioDia = new TimeSpan(9, 0, 0);
+                        horaFinDia = new TimeSpan(18, 0, 0);
+                    }
+
+                    // Si el día está desactivado, retornar lista vacía
+                    if (!diaActivo)
+                    {
+                        return new Response<List<TimeSlotDTOResponse>>(
+                            new List<TimeSlotDTOResponse>(),
+                            "El profesional no atiende este día de la semana");
+                    }
+
+                    var intervaloMinutos = 30;
                     var slots = new List<TimeSlotDTOResponse>();
 
-                    for (var hora = horaInicio; hora < horaFin; hora++)
+                    var currentSlotTime = horaInicioDia;
+                    while (currentSlotTime < horaFinDia)
                     {
-                        for (var minuto = 0; minuto < 60; minuto += intervaloMinutos)
+                        // Usar 'fecha' (medianoche local en UTC) como base para generar slots
+                        // en hora local del negocio correctamente
+                        var slotInicio = fecha.Add(currentSlotTime);
+                        var slotFin = slotInicio.AddMinutes(duracionMinutos);
+                        var slotFinTimeSpan = TimeSpan.FromMinutes(currentSlotTime.TotalMinutes + duracionMinutos);
+
+                        // No crear slots que excedan el horario laboral
+                        if (slotFinTimeSpan > horaFinDia)
                         {
-                            var slotInicio = fecha.Date.AddHours(hora).AddMinutes(minuto);
-                            var slotFin = slotInicio.AddMinutes(duracionMinutos);
-
-                            // No crear slots que excedan el horario laboral
-                            if (slotFin.Hour > horaFin || (slotFin.Hour == horaFin && slotFin.Minute > 0))
-                                continue;
-
-                            // No crear slots en el pasado
-                            if (slotInicio.ToUniversalTime() <= DateTime.UtcNow)
-                                continue;
-
-                            // Verificar si el slot tiene conflicto con eventos existentes
-                            var slotInicioUtc = slotInicio.ToUniversalTime();
-                            var slotFinUtc = slotFin.ToUniversalTime();
-
-                            var tieneConflicto = eventosDelDia.Any(e =>
-                                (slotInicioUtc < e.FechaFin && slotFinUtc > e.FechaInicio));
-
-                            slots.Add(new TimeSlotDTOResponse
-                            {
-                                FechaInicio = slotInicio,
-                                FechaFin = slotFin,
-                                Disponible = !tieneConflicto
-                            });
+                            currentSlotTime = currentSlotTime.Add(TimeSpan.FromMinutes(intervaloMinutos));
+                            continue;
                         }
+
+                        // No crear slots en el pasado
+                        if (slotInicio <= DateTime.UtcNow)
+                        {
+                            currentSlotTime = currentSlotTime.Add(TimeSpan.FromMinutes(intervaloMinutos));
+                            continue;
+                        }
+
+                        // Verificar si el inicio del slot cae dentro de una exclusión (ej: almuerzo)
+                        // Solo se bloquean slots cuyo INICIO esté dentro del rango de exclusión
+                        // Ej: exclusión 12:00-13:00 bloquea slots de 12:00 y 12:30, pero permite 11:30 y 13:00
+                        var slotInicioTs = currentSlotTime;
+                        var enExclusion = exclusionesHorario.Any(ex =>
+                            slotInicioTs >= ex.HoraInicio && slotInicioTs < ex.HoraFin);
+
+                        if (enExclusion)
+                        {
+                            currentSlotTime = currentSlotTime.Add(TimeSpan.FromMinutes(intervaloMinutos));
+                            continue;
+                        }
+
+                        // Verificar si el slot tiene conflicto con eventos existentes
+                        var tieneConflicto = eventosDelDia.Any(e =>
+                            (slotInicio < e.FechaFin && slotFin > e.FechaInicio));
+
+                        slots.Add(new TimeSlotDTOResponse
+                        {
+                            FechaInicio = slotInicio,
+                            FechaFin = slotFin,
+                            Disponible = !tieneConflicto
+                        });
+
+                        currentSlotTime = currentSlotTime.Add(TimeSpan.FromMinutes(intervaloMinutos));
                     }
 
                     if (!slots.Any())

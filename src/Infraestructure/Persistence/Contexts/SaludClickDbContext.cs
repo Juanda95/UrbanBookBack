@@ -25,7 +25,10 @@ namespace Persistence.Contexts
         public DbSet<SmtpConfig> SmtpConfigs { get; set; }
 
         public DbSet<Servicio> Servicios { get; set; }
-         
+
+        public DbSet<HorarioAtencion> HorariosAtencion { get; set; }
+        public DbSet<ExclusionHorario> ExclusionesHorario { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Aplicar configuraciones personalizadas desde el ensamblaje actual

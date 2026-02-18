@@ -109,8 +109,8 @@ namespace Application.Services
                 using (unitOfWork)
                 {
                     var servicioRepository = unitOfWork.GetRepository<Servicio>();
-                    var servicios = await servicioRepository.FindAllAsync(s => s.Nombre == UpdateRequest.Nombre);
-                    var servicioExistente = servicios.FirstOrDefault();
+                    var servicioExistente = await servicioRepository.FirstOrDefaultAsync(
+                        s => s.ServicioId == UpdateRequest.ServicioId);
 
                     if (servicioExistente == null)
                     {
