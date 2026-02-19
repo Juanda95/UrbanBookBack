@@ -6,6 +6,7 @@ using Application.Services.Calendario;
 using Application.Services.Interfaces;
 using Application.Services.Interfaces.Calendario;
 using Application.Services.Interfaces.Messaging;
+using Domain.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
@@ -16,6 +17,7 @@ namespace Application
         public static void AddAplicationLayer(this IServiceCollection services)
         {
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            services.AddScoped<ITenantService, TenantService>();
             services.AddScoped<ICommonService<UsuarioDTOResponse, UsuarioDTORequest, UsuarioDTOUpdateRequest>, UsuarioService>();
             services.AddScoped<ICommonService<ClienteDTOResponse, ClienteDTORequest, ClienteDTOUpdateRequest>, ClienteService>();
             services.AddScoped<IEventsService, EventoServices>();
@@ -29,6 +31,7 @@ namespace Application
             services.AddScoped<IServicioService, ServicioService>();
             services.AddScoped<IPublicBookingService, PublicBookingService>();
             services.AddScoped<IHorarioAtencionService, HorarioAtencionService>();
+            services.AddScoped<INegocioService, NegocioService>();
         }
     }
 }

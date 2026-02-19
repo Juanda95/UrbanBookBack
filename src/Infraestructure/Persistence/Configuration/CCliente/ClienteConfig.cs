@@ -43,6 +43,14 @@ namespace Persistence.Configuration.Ccliente
                 .WithOne(c => c.Cliente)
                 .HasForeignKey(c => c.ClienteId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Multi-tenancy
+            cliente.Property(c => c.NegocioId).IsRequired();
+            cliente.HasOne(c => c.Negocio)
+                .WithMany(n => n.Clientes)
+                .HasForeignKey(c => c.NegocioId)
+                .OnDelete(DeleteBehavior.Restrict);
+            cliente.HasIndex(c => c.NegocioId);
         }
     }
 }

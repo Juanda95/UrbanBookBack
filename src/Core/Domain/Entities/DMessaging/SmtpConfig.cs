@@ -1,10 +1,18 @@
-﻿namespace Domain.Entities.DMessaging
+﻿using Domain.Entities.DNegocio;
+
+namespace Domain.Entities.DMessaging
 {
     /// <summary>
     /// Represents the SMTP configuration settings.
     /// </summary>
-    public class SmtpConfig
+    public class SmtpConfig : ITenantEntity
     {
+        /// <summary>
+        /// Identificador del negocio (tenant) al que pertenece esta configuracion SMTP.
+        /// </summary>
+        public int NegocioId { get; set; }
+        public Negocio? Negocio { get; set; }
+
         /// <summary>
         /// Gets or sets the ID of the SMTP configuration.
         /// </summary>

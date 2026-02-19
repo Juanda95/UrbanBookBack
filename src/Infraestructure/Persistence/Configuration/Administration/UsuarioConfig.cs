@@ -50,6 +50,14 @@ namespace Persistence.Configuration.Administration
                 .WithOne(c => c.Usuario)
                 .HasForeignKey(c => c.UsuarioId);
 
+            // Multi-tenancy
+            Usuario.Property(u => u.NegocioId).IsRequired();
+            Usuario.HasOne(u => u.Negocio)
+                .WithMany(n => n.Usuarios)
+                .HasForeignKey(u => u.NegocioId)
+                .OnDelete(DeleteBehavior.Restrict);
+            Usuario.HasIndex(u => u.NegocioId);
+
         }
     }
 }

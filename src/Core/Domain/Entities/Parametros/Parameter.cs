@@ -1,7 +1,15 @@
-﻿namespace Domain.Entities.Parametros
+﻿using Domain.Entities.DNegocio;
+
+namespace Domain.Entities.Parametros
 {
     public class Parameter
     {
+        /// <summary>
+        /// Identificador del negocio (tenant). NULL = parameter global del sistema.
+        /// </summary>
+        public int? NegocioId { get; set; }
+        public Negocio? Negocio { get; set; }
+
         /// <summary>
         /// Gets or sets the IdParameter.
         /// </summary>

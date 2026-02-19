@@ -6,6 +6,7 @@ using AutoMapper;
 using Domain.Entities.DCalendario;
 using Domain.Entities.Dcliente;
 using Domain.Entities.DServicio;
+using Domain.Entities.DNegocio;
 using Domain.Entities.DUsuario;
 using Domain.Entities.Parametros;
 
@@ -66,6 +67,12 @@ namespace Application.Helpers.Mappings
             CreateMap<HorarioAtencion, HorarioAtencionDTOResponse>();
             CreateMap<ExclusionHorarioDTORequest, ExclusionHorario>();
             CreateMap<ExclusionHorario, ExclusionHorarioDTOResponse>();
+
+            // Negocio (Multi-tenancy)
+            CreateMap<NegocioDTORequest, Negocio>();
+            CreateMap<NegocioDTOUpdateRequest, Negocio>();
+            CreateMap<Negocio, NegocioDTOResponse>();
+            CreateMap<Negocio, TenantInfoDTOResponse>();
 
         }
 

@@ -1,4 +1,5 @@
 ﻿using Domain.Entities.Dcliente;
+using Domain.Entities.DNegocio;
 using Domain.Entities.DUsuario;
 
 namespace Domain.Entities.DCalendario
@@ -6,8 +7,14 @@ namespace Domain.Entities.DCalendario
     /// <summary>
     /// Representa un evento en un calendario.
     /// </summary>
-    public class Evento
+    public class Evento : ITenantEntity
     {
+        /// <summary>
+        /// Identificador del negocio (tenant) al que pertenece este evento.
+        /// </summary>
+        public int NegocioId { get; set; }
+        public Negocio? Negocio { get; set; }
+
         /// <summary>
         /// Identificador único del Evento.
         /// </summary>

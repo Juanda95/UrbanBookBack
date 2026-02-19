@@ -114,18 +114,24 @@ namespace Application.Services
 
                 await unitOfWork.SaveChangesAsync();
              
-                // ENVIAR EMAIL DE CONFIRMACION SIEMPRE (con o sin consentimientos)
+                // ENVIAR EMAIL DE CONFIRMACION usando SmtpConfig del tenant
                 try
                 {
-                    string htmlBody = GenerarEmailConfirmacion(NuevoEvento, cliente);
-                    
-                    await _emailService.SendEmailAsync(new SendEmailDTORequest
+                    var smtpConfigRepo = unitOfWork.GetRepository<Domain.Entities.DMessaging.SmtpConfig>();
+                    var smtpConfig = (await smtpConfigRepo.GetAllAsync()).FirstOrDefault();
+
+                    if (smtpConfig != null)
                     {
-                        SmtpConfigId = 2,
-                        To = cliente.Correo,
-                        Subject = $"Confirmación de Cita Agendada - {NuevoEvento.Titulo}",
-                        Body = htmlBody
-                    });
+                        string htmlBody = GenerarEmailConfirmacion(NuevoEvento, cliente);
+
+                        await _emailService.SendEmailAsync(new SendEmailDTORequest
+                        {
+                            SmtpConfigId = smtpConfig.SmtpConfigId,
+                            To = cliente.Correo,
+                            Subject = $"Confirmación de Cita Agendada - {NuevoEvento.Titulo}",
+                            Body = htmlBody
+                        });
+                    }
                 }
                 catch (Exception emailEx)
                 {
@@ -231,11 +237,6 @@ namespace Application.Services
                         evento => evento.Include(e => e.Cliente)
                     );
 
-                    if (!Eventos.Any())
-                    {
-                        return new Response<List<EventoDTOResponse>>("No se encontraron eventos", HttpStatusCode.NotFound);
-                    }
-                    
                     // Mapear con la relación de cliente incluida
                     var EventosResponse = Eventos.Select(Evento => mapper.Map<EventoDTOResponse>(Evento)).ToList();
                     return new Response<List<EventoDTOResponse>>(EventosResponse, "Eventos obtenidos con exito");

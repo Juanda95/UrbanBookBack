@@ -1,4 +1,5 @@
 ﻿using Domain.Entities.DCalendario;
+using Domain.Entities.DNegocio;
 
 namespace Domain.Entities.Dcliente
 {
@@ -6,8 +7,14 @@ namespace Domain.Entities.Dcliente
     /// Representa un cliente en el sistema.
     /// Contiene información básica del cliente: nombre, apellidos, número de documento, teléfono y correo.
     /// </summary>
-    public class Cliente
+    public class Cliente : ITenantEntity
     {
+        /// <summary>
+        /// Identificador del negocio (tenant) al que pertenece este cliente.
+        /// </summary>
+        public int NegocioId { get; set; }
+        public Negocio? Negocio { get; set; }
+
         /// <summary>
         /// Identificador único del cliente.
         /// </summary>

@@ -29,16 +29,17 @@ namespace UrbanBook.Handlers
             builder.Services.AddAuthentication("Bearer").AddJwtBearer(opt =>
             {
                 var signinKey = new SymmetricSecurityKey(key);
-                var signingCredentials = new SigningCredentials(signinKey, SecurityAlgorithms.HmacSha256Signature);
 
                 opt.RequireHttpsMetadata = false;
+                opt.MapInboundClaims = false;
                 opt.TokenValidationParameters = new TokenValidationParameters()
                 {
                     ValidateAudience = false,
                     ValidateIssuer = false,
-                    IssuerSigningKey = signinKey
+                    IssuerSigningKey = signinKey,
+                    RoleClaimType = "role",
+                    NameClaimType = "unique_name"
                 };
-
             });
         
         }

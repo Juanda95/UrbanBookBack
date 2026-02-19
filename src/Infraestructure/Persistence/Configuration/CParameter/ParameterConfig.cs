@@ -43,6 +43,14 @@ namespace Persistence.Configuration.CParameter
             Parameter.HasMany(p => p.Values)
                 .WithOne(v => v.Parameters)
                 .HasForeignKey(v => v.IdParameter);
+
+            // Multi-tenancy (NegocioId nullable: NULL = parameter global del sistema)
+            Parameter.Property(p => p.NegocioId).IsRequired(false);
+            Parameter.HasOne(p => p.Negocio)
+                .WithMany(n => n.Parameters)
+                .HasForeignKey(p => p.NegocioId)
+                .OnDelete(DeleteBehavior.Restrict);
+            Parameter.HasIndex(p => p.NegocioId);
         }
     }
 }

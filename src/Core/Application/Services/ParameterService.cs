@@ -4,15 +4,17 @@ using Application.Helpers.Wrappers;
 using Application.Services.Interfaces;
 using AutoMapper;
 using Domain.Entities.Parametros;
+using Domain.Interfaces;
 using Persistence.UnitOfWork.Interface;
 using System.Net;
 
 namespace Application.Services
 {
-    public class ParameterService(IUnitOfWork unitOfWork, IMapper mapper) : IParameterService
+    public class ParameterService(IUnitOfWork unitOfWork, IMapper mapper, ITenantService tenantService) : IParameterService
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly IMapper _mapper = mapper;
+        private readonly ITenantService _tenantService = tenantService;
 
         public async Task<Response<ParameterDTOResponse>> CreateAsync(ParametersDTORequest request)
         {
@@ -22,15 +24,23 @@ namespace Application.Services
                 {
                     var parameterRepository = _unitOfWork.GetRepository<Parameter>();
                     Parameter newParameter = _mapper.Map<Parameter>(request);
+
+                    // Asignar NegocioId del tenant actual (si hay tenant activo)
+                    var tenantId = _tenantService.GetCurrentTenantId();
+                    if (tenantId > 0)
+                    {
+                        newParameter.NegocioId = tenantId;
+                    }
+
                     parameterRepository.Insert(newParameter);
                     await _unitOfWork.SaveChangesAsync();
                     var parameterResponse = _mapper.Map<ParameterDTOResponse>(newParameter);
-                    return new Response<ParameterDTOResponse>(parameterResponse, "El parámetro se creó con éxito", HttpStatusCode.Created);
+                    return new Response<ParameterDTOResponse>(parameterResponse, "El parï¿½metro se creï¿½ con ï¿½xito", HttpStatusCode.Created);
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Ocurrió un error en el proceso de creación del parámetro: {ex.Message}");
+                throw new Exception($"Ocurriï¿½ un error en el proceso de creaciï¿½n del parï¿½metro: {ex.Message}");
             }
         }
 
@@ -45,17 +55,17 @@ namespace Application.Services
 
                     if (parameter == null)
                     {
-                        return new Response<bool>($"No se encontró ningún parámetro con el ID {Id}", HttpStatusCode.NotFound);
+                        return new Response<bool>($"No se encontrï¿½ ningï¿½n parï¿½metro con el ID {Id}", HttpStatusCode.NotFound);
                     }
 
                     parameterRepository.Delete(parameter);
                     await _unitOfWork.SaveChangesAsync();
-                    return new Response<bool>(true, "Parámetro eliminado correctamente");
+                    return new Response<bool>(true, "Parï¿½metro eliminado correctamente");
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Ocurrió un error al eliminar el parámetro: {ex.Message}");
+                throw new Exception($"Ocurriï¿½ un error al eliminar el parï¿½metro: {ex.Message}");
             }
         }
 
@@ -71,16 +81,16 @@ namespace Application.Services
 
                     if (!parameters.Any())
                     {
-                        return new Response<List<ParameterDTOResponse>>("No se encontraron parámetros", HttpStatusCode.NotFound);
+                        return new Response<List<ParameterDTOResponse>>("No se encontraron parï¿½metros", HttpStatusCode.NotFound);
                     }
 
                     var parametersResponse = parameters.Select(p => _mapper.Map<ParameterDTOResponse>(p)).ToList();
-                    return new Response<List<ParameterDTOResponse>>(parametersResponse, "Parámetros obtenidos con éxito");
+                    return new Response<List<ParameterDTOResponse>>(parametersResponse, "Parï¿½metros obtenidos con ï¿½xito");
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Ocurrió un error en la consulta de parámetros: {ex.Message}");
+                throw new Exception($"Ocurriï¿½ un error en la consulta de parï¿½metros: {ex.Message}");
             }
         }
 
@@ -95,16 +105,16 @@ namespace Application.Services
 
                     if (parameter == null)
                     {
-                        return new Response<ParameterDTOResponse>($"No se encontró información para el ID {Id}", HttpStatusCode.NotFound);
+                        return new Response<ParameterDTOResponse>($"No se encontrï¿½ informaciï¿½n para el ID {Id}", HttpStatusCode.NotFound);
                     }
 
                     var parameterResponse = _mapper.Map<ParameterDTOResponse>(parameter);
-                    return new Response<ParameterDTOResponse>(parameterResponse, "Parámetro obtenido con éxito");
+                    return new Response<ParameterDTOResponse>(parameterResponse, "Parï¿½metro obtenido con ï¿½xito");
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Ocurrió un error al obtener el parámetro: {ex.Message}");
+                throw new Exception($"Ocurriï¿½ un error al obtener el parï¿½metro: {ex.Message}");
             }
         }
                                                       
@@ -120,18 +130,18 @@ namespace Application.Services
 
                     if (existingParameter == null)
                     {
-                        return new Response<bool>($"No se encontró ningún parámetro con el ID {updateRequest.IdParameter}", HttpStatusCode.NotFound);
+                        return new Response<bool>($"No se encontrï¿½ ningï¿½n parï¿½metro con el ID {updateRequest.IdParameter}", HttpStatusCode.NotFound);
                     }
 
                     if (updateRequest.Values == null || !updateRequest.Values.Any())
                     {
-                        return new Response<bool>("Debe proporcionar al menos un valor para actualizar el parámetro", HttpStatusCode.BadRequest);
+                        return new Response<bool>("Debe proporcionar al menos un valor para actualizar el parï¿½metro", HttpStatusCode.BadRequest);
                     }
                     // Identifica los valores existentes para actualizar o eliminar
                     var existingValuesIds = existingParameter.Values.Select(v => v.IdValue).ToList();
                     var updatedValuesIds = updateRequest.Values.Where(v => v.IdValue != 0).Select(v => v.IdValue).ToList();
 
-                    // Elimina los valores que no están en el updateRequest
+                    // Elimina los valores que no estï¿½n en el updateRequest
                     existingParameter.Values.RemoveAll(v => !updatedValuesIds.Contains(v.IdValue));
 
                     foreach (var valueDto in updateRequest.Values)
@@ -155,12 +165,12 @@ namespace Application.Services
 
                     _mapper.Map(updateRequest, existingParameter);
                     await _unitOfWork.SaveChangesAsync();
-                    return new Response<bool>(true, "Parámetro actualizado correctamente");
+                    return new Response<bool>(true, "Parï¿½metro actualizado correctamente");
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Ocurrió un error durante la actualización del parámetro: {ex.Message}");
+                throw new Exception($"Ocurriï¿½ un error durante la actualizaciï¿½n del parï¿½metro: {ex.Message}");
             }
         }
     }

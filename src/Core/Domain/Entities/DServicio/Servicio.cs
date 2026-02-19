@@ -1,11 +1,19 @@
-﻿namespace Domain.Entities.DServicio
+﻿using Domain.Entities.DNegocio;
+
+namespace Domain.Entities.DServicio
 {
     /// <summary>
     /// Representa un servicio ofrecido por el negocio (ej: Corte de Pelo, Barba).
     /// Contiene información del nombre, descripción, precio y duración estimada del servicio.
     /// </summary>
-    public class Servicio
+    public class Servicio : ITenantEntity
     {
+        /// <summary>
+        /// Identificador del negocio (tenant) al que pertenece este servicio.
+        /// </summary>
+        public int NegocioId { get; set; }
+        public Negocio? Negocio { get; set; }
+
         /// <summary>
         /// Identificador único del servicio.
         /// </summary>

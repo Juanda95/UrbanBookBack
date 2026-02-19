@@ -32,8 +32,14 @@ namespace Persistence.Configuration.CMessaging
             smtpConfig.Property(s => s.Password)
                 .HasMaxLength(100)
                 .IsRequired();
-            
-            
+
+            // Multi-tenancy
+            smtpConfig.Property(s => s.NegocioId).IsRequired();
+            smtpConfig.HasOne(s => s.Negocio)
+                .WithMany(n => n.SmtpConfigs)
+                .HasForeignKey(s => s.NegocioId)
+                .OnDelete(DeleteBehavior.Restrict);
+            smtpConfig.HasIndex(s => s.NegocioId);
         }
     }
 }

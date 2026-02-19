@@ -40,7 +40,7 @@ namespace UrbanBook.Handlers
 
                             if (errorMessages.Count > 0)
                             {
-                                ResponseContext(context, errorMessages, "Los campos son obligatorios", HttpStatusCode.BadRequest);
+                                await ResponseContext(context, errorMessages, "Los campos son obligatorios", HttpStatusCode.BadRequest);
                                 return;
                             }
                         }
@@ -57,7 +57,7 @@ namespace UrbanBook.Handlers
 
                             if (endpoint == null)
                             {
-                                ResponseContext(context, new List<string>(), "La pagina no existe", HttpStatusCode.NotFound);
+                                await ResponseContext(context, new List<string>(), "La pagina no existe", HttpStatusCode.NotFound);
                                 return;
                             }
                         }
@@ -72,7 +72,7 @@ namespace UrbanBook.Handlers
                         try
                         {
 
-                            ResponseContext(context, new List<string>(), "Usted no esta autorizado para realizar esta peticion", HttpStatusCode.Unauthorized);
+                            await ResponseContext(context, new List<string>(), "Usted no esta autorizado para realizar esta peticion", HttpStatusCode.Unauthorized);
                             return;
 
                         }
@@ -94,15 +94,16 @@ namespace UrbanBook.Handlers
                 throw;
             }
         }
-        private async void ResponseContext(HttpContext context, List<string> errorMessages, string Message, HttpStatusCode statuscode)
+        private async Task ResponseContext(HttpContext context, List<string> errorMessages, string Message, HttpStatusCode statuscode)
         {
             var response = new Response<string>(Message, errorMessages, statuscode);
             var jsonResponse = JsonSerializer.Serialize(response);
+            var bytes = System.Text.Encoding.UTF8.GetBytes(jsonResponse);
 
             context.Response.ContentType = JsonContentType;
-            context.Response.ContentLength = jsonResponse.Length;
+            context.Response.ContentLength = bytes.Length;
 
-            await context.Response.WriteAsync(jsonResponse);
+            await context.Response.Body.WriteAsync(bytes);
         }
 
         private List<string> ExtractErrorMessages(string responseBody)

@@ -362,17 +362,23 @@ namespace Application.Services
                     eventoRepository.Insert(nuevoEvento);
                     await unitOfWork.SaveChangesAsync();
 
-                    // Enviar email de confirmación
+                    // Enviar email de confirmación usando SmtpConfig del tenant
                     try
                     {
-                        string htmlBody = GenerarEmailConfirmacion(nuevoEvento, cliente, servicio);
-                        await _emailService.SendEmailAsync(new SendEmailDTORequest
+                        var smtpConfigRepo = unitOfWork.GetRepository<Domain.Entities.DMessaging.SmtpConfig>();
+                        var smtpConfig = (await smtpConfigRepo.GetAllAsync()).FirstOrDefault();
+
+                        if (smtpConfig != null)
                         {
-                            SmtpConfigId = 2,
-                            To = cliente.Correo,
-                            Subject = $"Confirmación de Cita - {servicio.Nombre}",
-                            Body = htmlBody
-                        });
+                            string htmlBody = GenerarEmailConfirmacion(nuevoEvento, cliente, servicio);
+                            await _emailService.SendEmailAsync(new SendEmailDTORequest
+                            {
+                                SmtpConfigId = smtpConfig.SmtpConfigId,
+                                To = cliente.Correo,
+                                Subject = $"Confirmación de Cita - {servicio.Nombre}",
+                                Body = htmlBody
+                            });
+                        }
                     }
                     catch (Exception emailEx)
                     {

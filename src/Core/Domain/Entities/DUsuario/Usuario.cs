@@ -1,4 +1,5 @@
 ﻿using Domain.Entities.DCalendario;
+using Domain.Entities.DNegocio;
 
 namespace Domain.Entities.DUsuario
 {
@@ -6,8 +7,14 @@ namespace Domain.Entities.DUsuario
     /// Representa un usuario del sistema.
     /// Contiene información básica como el ID, el nombre de usuario y la contraseña, así como una lista de perfiles asociados.
     /// </summary>
-    public class Usuario
+    public class Usuario : ITenantEntity
     {
+        /// <summary>
+        /// Identificador del negocio (tenant) al que pertenece este usuario.
+        /// </summary>
+        public int NegocioId { get; set; }
+        public Negocio? Negocio { get; set; }
+
         /// <summary>
         /// Identificador único del usuario.
         /// </summary>

@@ -35,6 +35,14 @@ namespace Persistence.Configuration.Administration
             builder.HasOne(h => h.Usuario)
                 .WithMany(u => u.HorariosAtencion)
                 .HasForeignKey(h => h.UsuarioId);
+
+            // Multi-tenancy
+            builder.Property(h => h.NegocioId).IsRequired();
+            builder.HasOne(h => h.Negocio)
+                .WithMany(n => n.HorariosAtencion)
+                .HasForeignKey(h => h.NegocioId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(h => h.NegocioId);
         }
     }
 }

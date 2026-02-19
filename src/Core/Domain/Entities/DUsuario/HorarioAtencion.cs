@@ -1,10 +1,18 @@
+using Domain.Entities.DNegocio;
+
 namespace Domain.Entities.DUsuario
 {
     /// <summary>
     /// Representa el horario de atención de un profesional para un día específico de la semana.
     /// </summary>
-    public class HorarioAtencion
+    public class HorarioAtencion : ITenantEntity
     {
+        /// <summary>
+        /// Identificador del negocio (tenant) al que pertenece este horario.
+        /// </summary>
+        public int NegocioId { get; set; }
+        public Negocio? Negocio { get; set; }
+
         public int HorarioAtencionId { get; set; }
 
         public int UsuarioId { get; set; }

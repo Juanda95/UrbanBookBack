@@ -36,36 +36,13 @@ namespace Persistence.Configuration.CServicio
                 .IsRequired()
                 .HasDefaultValue(true);
 
-            // Seed data con servicios iniciales
-            servicio.HasData(
-                new Servicio
-                {
-                    ServicioId = 1,
-                    Nombre = "Corte de Pelo",
-                    Descripcion = "Corte de pelo profesional con estilo personalizado",
-                    Precio = 25000,
-                    DuracionMinutos = 60,
-                    Activo = true
-                },
-                new Servicio
-                {
-                    ServicioId = 2,
-                    Nombre = "Corte de Pelo y Barba",
-                    Descripcion = "Corte de pelo y arreglo de barba profesional",
-                    Precio = 35000,
-                    DuracionMinutos = 90,
-                    Activo = true
-                },
-                new Servicio
-                {
-                    ServicioId = 3,
-                    Nombre = "Solo Barba",
-                    Descripcion = "Arreglo y perfilado de barba profesional",
-                    Precio = 15000,
-                    DuracionMinutos = 30,
-                    Activo = true
-                }
-            );
+            // Multi-tenancy (seed data removida - se crean servicios al crear negocio)
+            servicio.Property(s => s.NegocioId).IsRequired();
+            servicio.HasOne(s => s.Negocio)
+                .WithMany(n => n.Servicios)
+                .HasForeignKey(s => s.NegocioId)
+                .OnDelete(DeleteBehavior.Restrict);
+            servicio.HasIndex(s => s.NegocioId);
         }
     }
 }
