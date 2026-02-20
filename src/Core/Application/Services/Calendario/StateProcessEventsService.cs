@@ -35,7 +35,9 @@ namespace Application.Services.Calendario
                     var StateProcessEvents = await StateProcessEventsRepository.GetAllAsyncThenInclude(
                         stateProcess => stateProcess
                         .Include(s => s.Eventos)
-                            .ThenInclude(e => e.Cliente));
+                            .ThenInclude(e => e.Cliente)
+                        .Include(s => s.Eventos)
+                            .ThenInclude(e => e.Usuario));
                     var StateProcessEventsResponse = _mapper.Map<List<StateProcessEventsResponse>>(StateProcessEvents);
                     return new Response<List<StateProcessEventsResponse>>(StateProcessEventsResponse, "Lista de eventos de estado", HttpStatusCode.OK);
                 }

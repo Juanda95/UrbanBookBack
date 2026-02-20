@@ -56,6 +56,11 @@
         public string? Motivo { get; set; }
 
         /// <summary>
+        /// Nombre del profesional asignado al evento.
+        /// </summary>
+        public string? UsuarioNombre { get; set; }
+
+        /// <summary>
         /// Información básica del cliente asociado (proyección sin datos sensibles).
         /// </summary>
         public ClienteEventoDTOResponse? Cliente { get; set; }
