@@ -6,6 +6,7 @@ using Domain.Entities.Dcliente;
 using Domain.Entities.DNegocio;
 using Domain.Entities.DServicio;
 using Domain.Entities.DUsuario;
+using Domain.Entities.DOtp;
 using Domain.Entities.Parametros;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
@@ -41,6 +42,8 @@ namespace Persistence.Contexts
         public DbSet<HorarioAtencion> HorariosAtencion { get; set; }
         public DbSet<ExclusionHorario> ExclusionesHorario { get; set; }
 
+        public DbSet<OtpVerification> OtpVerifications { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Aplicar configuraciones personalizadas desde el ensamblaje actual
@@ -64,6 +67,9 @@ namespace Persistence.Contexts
                 e => _tenantService.GetCurrentTenantId() == 0 || e.NegocioId == _tenantService.GetCurrentTenantId());
 
             modelBuilder.Entity<HorarioAtencion>().HasQueryFilter(
+                e => _tenantService.GetCurrentTenantId() == 0 || e.NegocioId == _tenantService.GetCurrentTenantId());
+
+            modelBuilder.Entity<OtpVerification>().HasQueryFilter(
                 e => _tenantService.GetCurrentTenantId() == 0 || e.NegocioId == _tenantService.GetCurrentTenantId());
 
             // Parameter: NegocioId nullable - NULL = global, visible para todos los tenants

@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Request;
+using Application.DTOs.Request;
 using Application.DTOs.Request.Messaging;
 using Application.DTOs.Response;
 using Application.Helpers.Wrappers;
@@ -7,16 +7,21 @@ using Application.Services.Interfaces.Messaging;
 using AutoMapper;
 using Domain.Entities.DCalendario;
 using Domain.Entities.Dcliente;
+using Domain.Entities.DOtp;
 using Domain.Entities.DServicio;
 using Domain.Entities.DUsuario;
+using Domain.Entities.Parametros;
 using Persistence.UnitOfWork.Interface;
 using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Application.Services
 {
-    public class PublicBookingService(IUnitOfWork unitOfWork, IMapper mapper, IEmailService emailService) : IPublicBookingService
+    public class PublicBookingService(IUnitOfWork unitOfWork, IMapper mapper, IEmailService emailService, IWhatsAppService whatsAppService) : IPublicBookingService
     {
         private readonly IEmailService _emailService = emailService;
+        private readonly IWhatsAppService _whatsAppService = whatsAppService;
 
         public async Task<Response<List<ProfessionalPublicDTOResponse>>> GetPublicProfessionals()
         {
@@ -187,36 +192,18 @@ namespace Application.Services
             {
                 using (unitOfWork)
                 {
-                    // Validar que al menos correo o teléfono estén presentes
-                    if (string.IsNullOrWhiteSpace(request.Correo) && string.IsNullOrWhiteSpace(request.Telefono))
+                    if (string.IsNullOrWhiteSpace(request.Telefono))
                     {
-                        return new Response<ClienteDTOResponse>("Debe proporcionar correo o teléfono", HttpStatusCode.BadRequest);
+                        return new Response<ClienteDTOResponse>("Debe proporcionar su número de teléfono", HttpStatusCode.BadRequest);
                     }
 
                     var clienteRepository = unitOfWork.GetRepository<Cliente>();
-
-                    // Buscar cliente por (correo OR teléfono) AND documento
-                    Cliente? cliente = null;
-
-                    if (!string.IsNullOrWhiteSpace(request.Correo))
-                    {
-                        var clientes = await clienteRepository.FindAllAsync(
-                            c => c.Correo == request.Correo && c.NumeroDocumento == request.NumeroDocumento
-                        );
-                        cliente = clientes.FirstOrDefault();
-                    }
-
-                    if (cliente == null && !string.IsNullOrWhiteSpace(request.Telefono))
-                    {
-                        var clientes = await clienteRepository.FindAllAsync(
-                            c => c.Telefono == request.Telefono && c.NumeroDocumento == request.NumeroDocumento
-                        );
-                        cliente = clientes.FirstOrDefault();
-                    }
+                    var clientes = await clienteRepository.FindAllAsync(c => c.Telefono == request.Telefono);
+                    var cliente = clientes.FirstOrDefault();
 
                     if (cliente == null)
                     {
-                        return new Response<ClienteDTOResponse>("No se encontró un cliente con los datos proporcionados", HttpStatusCode.NotFound);
+                        return new Response<ClienteDTOResponse>("No se encontró un cliente con el teléfono proporcionado", HttpStatusCode.NotFound);
                     }
 
                     var clienteResponse = mapper.Map<ClienteDTOResponse>(cliente);
@@ -244,11 +231,11 @@ namespace Application.Services
                         return new Response<ClienteDTOResponse>("Ya existe un cliente registrado con este correo electrónico", HttpStatusCode.Conflict);
                     }
 
-                    // Validar unicidad del número de documento
-                    var clientesDocumento = await clienteRepository.FindAllAsync(c => c.NumeroDocumento == request.NumeroDocumento);
-                    if (clientesDocumento.Any())
+                    // Validar unicidad del teléfono
+                    var clientesTelefono = await clienteRepository.FindAllAsync(c => c.Telefono == request.Telefono);
+                    if (clientesTelefono.Any())
                     {
-                        return new Response<ClienteDTOResponse>("Ya existe un cliente registrado con este número de documento", HttpStatusCode.Conflict);
+                        return new Response<ClienteDTOResponse>("Ya existe un cliente registrado con este número de teléfono", HttpStatusCode.Conflict);
                     }
 
                     Cliente nuevoCliente = mapper.Map<Cliente>(request);
@@ -262,6 +249,119 @@ namespace Application.Services
             catch (Exception ex)
             {
                 throw new Exception($"Ha ocurrido un error en el registro del cliente {ex}");
+            }
+        }
+
+        public async Task<Response<bool>> SendOtp(SendOtpDTORequest request)
+        {
+            try
+            {
+                using (unitOfWork)
+                {
+                    var otpRepository = unitOfWork.GetRepository<OtpVerification>();
+
+                    // Rate limiting: máximo 3 OTPs por teléfono en los últimos 10 minutos
+                    var tenMinutesAgo = DateTime.UtcNow.AddMinutes(-10);
+                    var recentOtps = await otpRepository.FindAllAsync(
+                        o => o.Telefono == request.Telefono && o.CreatedAt >= tenMinutesAgo);
+
+                    if (recentOtps.Count() >= 3)
+                    {
+                        return new Response<bool>(
+                            "Has solicitado demasiados códigos. Intenta de nuevo en unos minutos.",
+                            HttpStatusCode.TooManyRequests);
+                    }
+
+                    // Generar código de 6 dígitos
+                    var code = Random.Shared.Next(100000, 999999).ToString();
+
+                    // Hash SHA-256 del código para almacenamiento seguro
+                    var codeHash = Convert.ToHexString(
+                        SHA256.HashData(Encoding.UTF8.GetBytes(code)));
+
+                    // Crear registro OTP
+                    var otp = new OtpVerification
+                    {
+                        Telefono = request.Telefono,
+                        CodeHash = codeHash,
+                        CreatedAt = DateTime.UtcNow,
+                        ExpiresAt = DateTime.UtcNow.AddMinutes(5),
+                        IsUsed = false,
+                        Attempts = 0,
+                        ClienteId = request.ClienteId
+                    };
+
+                    otpRepository.Insert(otp);
+                    await unitOfWork.SaveChangesAsync();
+
+                    // Enviar OTP por WhatsApp
+                    var smsResult = await _whatsAppService.SendTextMessageAsync(
+                        request.Telefono,
+                        $"Tu código de verificación para UrbanBook es: {code}. Expira en 5 minutos.");
+
+                    if (!smsResult.Succeeded)
+                    {
+                        return new Response<bool>("Error al enviar el código de verificación por WhatsApp", HttpStatusCode.InternalServerError);
+                    }
+
+                    return new Response<bool>(true, "Código de verificación enviado por WhatsApp");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ha ocurrido un error al enviar el código OTP {ex}");
+            }
+        }
+
+        public async Task<Response<bool>> VerifyOtp(VerifyOtpDTORequest request)
+        {
+            try
+            {
+                using (unitOfWork)
+                {
+                    var otpRepository = unitOfWork.GetRepository<OtpVerification>();
+
+                    // Buscar el OTP más reciente no usado, no expirado, con intentos disponibles
+                    var otps = await otpRepository.FindAllAsync(
+                        o => o.Telefono == request.Telefono
+                             && !o.IsUsed
+                             && o.ExpiresAt > DateTime.UtcNow
+                             && o.Attempts < 3);
+
+                    var otp = otps.OrderByDescending(o => o.CreatedAt).FirstOrDefault();
+
+                    if (otp == null)
+                    {
+                        return new Response<bool>("No hay un código válido. Solicita uno nuevo.", HttpStatusCode.BadRequest);
+                    }
+
+                    // Hashear el código enviado y comparar
+                    var submittedHash = Convert.ToHexString(
+                        SHA256.HashData(Encoding.UTF8.GetBytes(request.Code)));
+
+                    if (otp.CodeHash != submittedHash)
+                    {
+                        otp.Attempts++;
+                        await unitOfWork.SaveChangesAsync();
+
+                        var remaining = 3 - otp.Attempts;
+                        if (remaining <= 0)
+                        {
+                            return new Response<bool>("Código incorrecto. Has agotado los intentos. Solicita un nuevo código.", HttpStatusCode.BadRequest);
+                        }
+                        return new Response<bool>($"Código incorrecto. Te quedan {remaining} intento(s).", HttpStatusCode.BadRequest);
+                    }
+
+                    // Marcar como usado
+                    otp.IsUsed = true;
+                    await unitOfWork.SaveChangesAsync();
+
+                    return new Response<bool>(true, "Código verificado correctamente");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ha ocurrido un error al verificar el código OTP {ex}");
             }
         }
 
@@ -368,7 +468,7 @@ namespace Application.Services
                         var smtpConfigRepo = unitOfWork.GetRepository<Domain.Entities.DMessaging.SmtpConfig>();
                         var smtpConfig = (await smtpConfigRepo.GetAllAsync()).FirstOrDefault();
 
-                        if (smtpConfig != null)
+                        if (smtpConfig != null && !string.IsNullOrWhiteSpace(cliente.Correo))
                         {
                             string htmlBody = GenerarEmailConfirmacion(nuevoEvento, cliente, servicio);
                             await _emailService.SendEmailAsync(new SendEmailDTORequest
@@ -395,6 +495,35 @@ namespace Application.Services
                 return new Response<EventoDTOResponse>(
                     "Error al crear la reserva. Por favor intenta más tarde.",
                     HttpStatusCode.InternalServerError);
+            }
+        }
+
+        public async Task<Response<bool>> IsOtpEnabled()
+        {
+            try
+            {
+                using (unitOfWork)
+                {
+                    var parameterRepository = unitOfWork.GetRepository<Parameter>();
+                    var parameter = await parameterRepository.FirstOrDefaultAsync(
+                        p => p.TypeParameter.Equals("OTP_VERIFICATION_CONFIG"),
+                        p => p.Values);
+
+                    if (parameter == null)
+                    {
+                        // Si no existe el parámetro, OTP está deshabilitado por defecto
+                        return new Response<bool>(false, "Verificación OTP no configurada");
+                    }
+
+                    var otpEnabledValue = parameter.Values?.Find(v => v.Code.Equals("OtpEnabled"));
+                    bool isEnabled = otpEnabledValue?.Name?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+
+                    return new Response<bool>(isEnabled, isEnabled ? "Verificación OTP habilitada" : "Verificación OTP deshabilitada");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ha ocurrido un error al consultar la configuración OTP {ex}");
             }
         }
 

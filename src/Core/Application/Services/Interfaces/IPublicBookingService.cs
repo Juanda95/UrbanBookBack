@@ -11,5 +11,8 @@ namespace Application.Services.Interfaces
         Task<Response<ClienteDTOResponse>> PublicLogin(PublicLoginDTORequest request);
         Task<Response<ClienteDTOResponse>> PublicRegister(ClienteDTORequest request);
         Task<Response<EventoDTOResponse>> CreatePublicBooking(PublicBookingDTORequest request);
+        Task<Response<bool>> SendOtp(SendOtpDTORequest request);
+        Task<Response<bool>> VerifyOtp(VerifyOtpDTORequest request);
+        Task<Response<bool>> IsOtpEnabled();
     }
 }

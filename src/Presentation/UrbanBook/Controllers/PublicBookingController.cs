@@ -63,5 +63,35 @@ namespace UrbanBook.Controllers
             var respuestaServicio = await _bookingService.CreatePublicBooking(request);
             return StatusCode((int)respuestaServicio.HttpStatusCode, respuestaServicio);
         }
+
+        //GET - Verificar si OTP está habilitado
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("IsOtpEnabled")]
+        public async Task<IActionResult> IsOtpEnabled()
+        {
+            var respuestaServicio = await _bookingService.IsOtpEnabled();
+            return StatusCode((int)respuestaServicio.HttpStatusCode, respuestaServicio);
+        }
+
+        //POST - Enviar OTP por WhatsApp
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("SendOtp")]
+        public async Task<IActionResult> SendOtp(SendOtpDTORequest request)
+        {
+            var respuestaServicio = await _bookingService.SendOtp(request);
+            return StatusCode((int)respuestaServicio.HttpStatusCode, respuestaServicio);
+        }
+
+        //POST - Verificar OTP
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("VerifyOtp")]
+        public async Task<IActionResult> VerifyOtp(VerifyOtpDTORequest request)
+        {
+            var respuestaServicio = await _bookingService.VerifyOtp(request);
+            return StatusCode((int)respuestaServicio.HttpStatusCode, respuestaServicio);
+        }
     }
 }
