@@ -36,9 +36,9 @@ namespace Domain.Entities.Dcliente
         public string SegundoApellido { get; set; } = string.Empty;
 
         /// <summary>
-        /// Número de documento del cliente.
+        /// Número de documento del cliente (opcional).
         /// </summary>
-        public string NumeroDocumento { get; set; } = string.Empty;
+        public string? NumeroDocumento { get; set; }
 
         /// <summary>
         /// Teléfono del cliente.

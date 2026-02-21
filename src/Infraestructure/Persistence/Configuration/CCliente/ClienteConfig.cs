@@ -28,7 +28,7 @@ namespace Persistence.Configuration.Ccliente
                 .HasMaxLength(100);
 
             cliente.Property(p => p.NumeroDocumento)
-                .IsRequired()
+                .IsRequired(false)
                 .HasMaxLength(100);
 
             cliente.Property(p => p.Telefono)

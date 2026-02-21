@@ -41,13 +41,11 @@ namespace Application.DTOs.Request
         public string SegundoApellido { get; set; } = string.Empty;
 
         /// <summary>
-        /// Número de documento del cliente.
+        /// Número de documento del cliente (opcional).
         /// </summary>
-        [Required(AllowEmptyStrings = false, ErrorMessage = "El número de documento del cliente es requerido")]
-        [DisplayFormat(ConvertEmptyStringToNull = false)]
         [MaxLength(100, ErrorMessage = "El número de documento del cliente debe ser menor a 100 caracteres")]
         [DisplayName("Número de documento")]
-        public string NumeroDocumento { get; set; } = string.Empty;
+        public string? NumeroDocumento { get; set; }
 
         /// <summary>
         /// Teléfono del cliente.
