@@ -2,14 +2,17 @@ using UrbanBook.Handlers;
 using Serilog;
 using Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
-//builder.Host.UseSerilog((context, services, configuration) => configuration
-//    .ReadFrom.Configuration(context.Configuration)
-//    .ReadFrom.Services(services)
-//    .Enrich.FromLogContext());
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("logs/urbanbook-.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7));
 
 // Add services to the container.
 #region ServiceExtensions            
@@ -31,6 +34,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddMemoryCache();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Health Checks
+var connectionString = builder.Configuration.GetConnectionString("cnUrbanBook") ?? string.Empty;
+builder.Services.AddHealthChecks()
+    .AddNpgSql(connectionString, name: "postgresql");
 
 var app = builder.Build();
 
@@ -70,5 +78,6 @@ app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();
