@@ -51,11 +51,8 @@ namespace Application.DTOs.Request
         /// <summary>
         /// Correo del cliente.
         /// </summary>
-        [Required(AllowEmptyStrings = false, ErrorMessage = "El correo del cliente es requerido")]
-        [DisplayFormat(ConvertEmptyStringToNull = false)]
         [MaxLength(100, ErrorMessage = "El correo del cliente debe ser menor a 100 caracteres")]
-        [EmailAddress(ErrorMessage = "El correo debe ser una dirección válida")]
         [DisplayName("Correo")]
-        public string Correo { get; set; } = string.Empty;
+        public string? Correo { get; set; }
     }
 }

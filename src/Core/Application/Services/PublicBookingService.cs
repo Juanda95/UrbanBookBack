@@ -224,11 +224,14 @@ namespace Application.Services
                 {
                     var clienteRepository = unitOfWork.GetRepository<Cliente>();
 
-                    // Validar unicidad del correo
-                    var clientesCorreo = await clienteRepository.FindAllAsync(c => c.Correo == request.Correo);
-                    if (clientesCorreo.Any())
+                    // Validar unicidad del correo (solo si se proporcionó)
+                    if (!string.IsNullOrWhiteSpace(request.Correo))
                     {
-                        return new Response<ClienteDTOResponse>("Ya existe un cliente registrado con este correo electrónico", HttpStatusCode.Conflict);
+                        var clientesCorreo = await clienteRepository.FindAllAsync(c => c.Correo == request.Correo);
+                        if (clientesCorreo.Any())
+                        {
+                            return new Response<ClienteDTOResponse>("Ya existe un cliente registrado con este correo electrónico", HttpStatusCode.Conflict);
+                        }
                     }
 
                     // Validar unicidad del teléfono
