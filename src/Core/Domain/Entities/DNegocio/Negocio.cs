@@ -1,5 +1,6 @@
 using Domain.Entities.DCalendario;
 using Domain.Entities.Dcliente;
+using Domain.Entities.DLandingPage;
 using Domain.Entities.DMessaging;
 using Domain.Entities.DServicio;
 using Domain.Entities.DUsuario;
@@ -42,5 +43,6 @@ namespace Domain.Entities.DNegocio
         public virtual List<SmtpConfig> SmtpConfigs { get; set; } = [];
         public virtual List<Parameter> Parameters { get; set; } = [];
         public virtual List<HorarioAtencion> HorariosAtencion { get; set; } = [];
+        public virtual List<LandingConfig> LandingConfigs { get; set; } = [];
     }
 }

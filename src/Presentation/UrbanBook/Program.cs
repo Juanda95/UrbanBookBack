@@ -46,7 +46,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<UrbanBookDbContext>();
-    var maxRetries = 5;
+    var maxRetries = 10;
     for (var i = 0; i < maxRetries; i++)
     {
         try
@@ -57,9 +57,17 @@ using (var scope = app.Services.CreateScope())
         catch (Npgsql.NpgsqlException) when (i < maxRetries - 1)
         {
             Console.WriteLine($"Database connection failed. Retrying in 5 seconds... ({i + 1}/{maxRetries})");
-            Thread.Sleep(5000);
+            Thread.Sleep(8000);
         }
     }
+}
+
+// Crear directorio base de file storage si no existe
+var fileStoragePath = app.Configuration["FileStorage:BasePath"];
+if (!string.IsNullOrWhiteSpace(fileStoragePath) && !Directory.Exists(fileStoragePath))
+{
+    Directory.CreateDirectory(fileStoragePath);
+    Console.WriteLine($"File storage directory created: {fileStoragePath}");
 }
 
 app.useHandlingMiddleware();

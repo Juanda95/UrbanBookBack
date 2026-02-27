@@ -1,6 +1,7 @@
 using Domain.Interfaces;
 using Domain.Entities;
 using Domain.Entities.DCalendario;
+using Domain.Entities.DLandingPage;
 using Domain.Entities.DMessaging;
 using Domain.Entities.Dcliente;
 using Domain.Entities.DNegocio;
@@ -44,6 +45,10 @@ namespace Persistence.Contexts
 
         public DbSet<OtpVerification> OtpVerifications { get; set; }
 
+        public DbSet<LandingConfig> LandingConfigs { get; set; }
+        public DbSet<LandingService> LandingServices { get; set; }
+        public DbSet<LandingGalleryItem> LandingGalleryItems { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Aplicar configuraciones personalizadas desde el ensamblaje actual
@@ -84,6 +89,16 @@ namespace Persistence.Contexts
             // Value filtra a través de su padre Parameter
             modelBuilder.Entity<Value>().HasQueryFilter(
                 e => _tenantService.GetCurrentTenantId() == 0 || e.Parameters!.NegocioId == null || e.Parameters!.NegocioId == _tenantService.GetCurrentTenantId());
+
+            // Landing page customization
+            modelBuilder.Entity<LandingConfig>().HasQueryFilter(
+                e => _tenantService.GetCurrentTenantId() == 0 || e.NegocioId == _tenantService.GetCurrentTenantId());
+
+            modelBuilder.Entity<LandingService>().HasQueryFilter(
+                e => _tenantService.GetCurrentTenantId() == 0 || e.NegocioId == _tenantService.GetCurrentTenantId());
+
+            modelBuilder.Entity<LandingGalleryItem>().HasQueryFilter(
+                e => _tenantService.GetCurrentTenantId() == 0 || e.NegocioId == _tenantService.GetCurrentTenantId());
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

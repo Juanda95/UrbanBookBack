@@ -5,6 +5,7 @@ using Application.DTOs.Response.Calendario;
 using AutoMapper;
 using Domain.Entities.DCalendario;
 using Domain.Entities.Dcliente;
+using Domain.Entities.DLandingPage;
 using Domain.Entities.DServicio;
 using Domain.Entities.DNegocio;
 using Domain.Entities.DUsuario;
@@ -73,6 +74,20 @@ namespace Application.Helpers.Mappings
             CreateMap<NegocioDTOUpdateRequest, Negocio>();
             CreateMap<Negocio, NegocioDTOResponse>();
             CreateMap<Negocio, TenantInfoDTOResponse>();
+
+            // Landing page customization
+            CreateMap<LandingConfigDTORequest, LandingConfig>()
+                .ForMember(dest => dest.LandingServices, opt => opt.MapFrom(src => src.Services))
+                .ForMember(dest => dest.LandingGalleryItems, opt => opt.MapFrom(src => src.GalleryItems));
+            CreateMap<LandingConfig, LandingConfigDTOResponse>()
+                .ForMember(dest => dest.Services, opt => opt.MapFrom(src => src.LandingServices))
+                .ForMember(dest => dest.GalleryItems, opt => opt.MapFrom(src => src.LandingGalleryItems));
+
+            CreateMap<LandingServiceDTORequest, LandingService>();
+            CreateMap<LandingService, LandingServiceDTOResponse>();
+
+            CreateMap<LandingGalleryItemDTORequest, LandingGalleryItem>();
+            CreateMap<LandingGalleryItem, LandingGalleryItemDTOResponse>();
 
         }
 
