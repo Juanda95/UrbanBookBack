@@ -10,7 +10,7 @@ namespace Domain.Entities.DNegocio
 {
     /// <summary>
     /// Representa un negocio (tenant) en la plataforma multi-tenancy.
-    /// Cada negocio tiene su propio subdominio: {slug}.urbanbook.nitidosport.com
+    /// Cada negocio tiene su propio subdominio: {slug}.urban-book.com
     /// </summary>
     public class Negocio
     {
