@@ -74,5 +74,17 @@ namespace Application.DTOs.Request
         [MaxLength(500, ErrorMessage = "El motivo debe ser menor a 500 caracteres")]
         public string? Motivo { get; set; }
 
+        /// <summary>
+        /// Identificador del servicio asociado (opcional).
+        /// </summary>
+        [DisplayName("Servicio")]
+        public int? ServicioId { get; set; }
+
+        /// <summary>
+        /// Precio del servicio al momento de la reserva (opcional).
+        /// </summary>
+        [DisplayName("Precio")]
+        public decimal? Precio { get; set; }
+
     }
 }

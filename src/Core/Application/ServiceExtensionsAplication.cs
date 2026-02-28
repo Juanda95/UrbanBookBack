@@ -33,6 +33,7 @@ namespace Application
             services.AddScoped<IHorarioAtencionService, HorarioAtencionService>();
             services.AddScoped<INegocioService, NegocioService>();
             services.AddScoped<ILandingConfigService, LandingConfigService>();
+            services.AddScoped<IDashboardService, DashboardService>();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Domain.Entities.Dcliente;
 using Domain.Entities.DNegocio;
+using Domain.Entities.DServicio;
 using Domain.Entities.DUsuario;
 
 namespace Domain.Entities.DCalendario
@@ -87,6 +88,16 @@ namespace Domain.Entities.DCalendario
         public string? Motivo { get; set; }
 
         /// <summary>
+        /// FK al servicio asociado a este evento (nullable para eventos legacy).
+        /// </summary>
+        public int? ServicioId { get; set; }
+
+        /// <summary>
+        /// Precio del servicio al momento de la reserva (snapshot).
+        /// </summary>
+        public decimal? Precio { get; set; }
+
+        /// <summary>
         /// cliente al que pertenece este contacto.
         /// </summary>
         public virtual Cliente? Cliente { get; set; }
@@ -100,6 +111,11 @@ namespace Domain.Entities.DCalendario
         /// State of the process of the event.
         /// </summary>
         public virtual StateProcessEvents? StateProcessEvent { get; set; }
+
+        /// <summary>
+        /// Servicio asociado al evento.
+        /// </summary>
+        public virtual Servicio? Servicio { get; set; }
 
     }
 }

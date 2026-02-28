@@ -67,6 +67,20 @@ namespace Persistence.Configuration.CCalendario
                 .WithMany(s => s.Eventos)
                 .HasForeignKey(e => e.StateProcessEventId);
 
+            Evento.Property(e => e.Precio)
+                .HasColumnType("numeric(18,2)")
+                .IsRequired(false);
+
+            Evento.Property(e => e.ServicioId)
+                .IsRequired(false);
+
+            Evento.HasOne(e => e.Servicio)
+                .WithMany()
+                .HasForeignKey(e => e.ServicioId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            Evento.HasIndex(e => e.ServicioId);
+
             // Multi-tenancy
             Evento.Property(e => e.NegocioId).IsRequired();
             Evento.HasOne(e => e.Negocio)

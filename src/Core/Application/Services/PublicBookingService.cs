@@ -452,6 +452,8 @@ namespace Application.Services
                     {
                         ClienteId = request.ClienteId,
                         UsuarioId = request.UsuarioId,
+                        ServicioId = servicio.ServicioId,
+                        Precio = servicio.Precio,
                         Titulo = servicio.Nombre,
                         Descripcion = $"Reserva pública - {servicio.Nombre}",
                         Estado = true,
